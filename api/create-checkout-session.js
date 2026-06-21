@@ -10,7 +10,7 @@ const PRODUCTS = {
   'briefs':     { name: 'Year of the Horse Briefs' },
 };
 
-const ALLOWED_COUNTRIES = ['MY', 'SG', 'AU', 'GB', 'US'];
+const ALLOWED_COUNTRIES = ['MY', 'SG'];
 
 // Accept both www and non-www variants of the site origin.
 function resolveOrigin(reqOrigin) {
@@ -104,6 +104,17 @@ export default async function handler(req, res) {
             delivery_estimate: {
               minimum: { unit: 'business_day', value: 5 },
               maximum: { unit: 'business_day', value: 10 },
+            },
+          },
+        },
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: { amount: 3500, currency: 'myr' },  // RM35 — Singapore via Teleport
+            display_name: 'Singapore (via Teleport)',
+            delivery_estimate: {
+              minimum: { unit: 'business_day', value: 3 },
+              maximum: { unit: 'business_day', value: 7 },
             },
           },
         },
