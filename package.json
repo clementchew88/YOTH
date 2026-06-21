@@ -4,7 +4,7 @@
   "description": "Year of the Horse — Stripe Checkout serverless function",
   "private": true,
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
     "stripe": "^14.0.0"
