@@ -1,0 +1,12 @@
+{
+  "name": "yoth-checkout",
+  "version": "1.0.0",
+  "description": "Year of the Horse — Stripe Checkout serverless function",
+  "private": true,
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
+  }
+}
