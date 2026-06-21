@@ -12,14 +12,37 @@ const PRODUCTS = {
 
 const ALLOWED_COUNTRIES = ['MY', 'SG', 'AU', 'GB', 'US'];
 
+// Accept both www and non-www variants of the site origin.
+function resolveOrigin(reqOrigin) {
+  const base = (process.env.SITE_ORIGIN || '').replace(/\/$/, '');
+  if (!base) return reqOrigin || '';
+  // Build the allowed set: whatever is configured, plus its www/non-www twin.
+  const allowed = new Set();
+  allowed.add(base);
+  if (base.startsWith('https://www.')) {
+    allowed.add('https://' + base.slice('https://www.'.length));
+  } else if (base.startsWith('https://')) {
+    allowed.add('https://www.' + base.slice('https://'.length));
+  }
+  // If the request's origin is in the allowed set, echo it back; else fall back to base.
+  if (reqOrigin && allowed.has(reqOrigin)) return reqOrigin;
+  return base;
+}
+
 export default async function handler(req, res) {
-  const origin = process.env.SITE_ORIGIN || '';
-  res.setHeader('Access-Control-Allow-Origin', origin);
+  const reqOrigin = req.headers.origin || '';
+  const allowOrigin = resolveOrigin(reqOrigin);
+
+  res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Origin for success/cancel redirects — prefer the configured base.
+  const redirectBase = (process.env.SITE_ORIGIN || allowOrigin).replace(/\/$/, '');
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
@@ -40,7 +63,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Decide price tier server-side
     const totalQty = items.reduce((sum, it) => sum + it.qty, 0);
     const unitPrice = totalQty >= 2 ? PRICE_BUNDLE : PRICE_SINGLE;
     const tierLabel = totalQty >= 2 ? 'Bundle price (RM149 each)' : 'Single price (RM169)';
@@ -73,8 +95,8 @@ export default async function handler(req, res) {
           },
         },
       }],
-      success_url: `${origin}/yoth?order=confirmed`,
-      cancel_url:  `${origin}/yoth`,
+      success_url: `${redirectBase}/yoth?order=confirmed`,
+      cancel_url:  `${redirectBase}/yoth`,
     });
 
     return res.status(200).json({ url: session.url });
