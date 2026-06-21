@@ -107,6 +107,13 @@ export default async function handler(req, res) {
             },
           },
         },
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: { amount: 0, currency: 'myr' },  // Free — self collect
+            display_name: 'Self-collect from Clement',
+          },
+        },
       ],
       success_url: `${redirectBase}/yoth?order=confirmed`,
       cancel_url:  `${redirectBase}/yoth`,
