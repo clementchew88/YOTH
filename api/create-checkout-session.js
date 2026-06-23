@@ -1,119 +1,80 @@
-import Stripe from 'stripe';
-import { applyCors } from './_cors.js';
+// Stripe Checkout Session creator — Vercel serverless function.
+// The browser cart POSTs { items: [{ product, size, qty }] } here.
+// Pricing is recomputed server-side so the client can never set its own price.
 
-// ─── Product catalogue (prices in sen) ───────────────────────────────────────
-// Bundle pricing kicks in once 2+ items (any product, any mix) are in the cart.
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+const CURRENCY = 'myr';
+
+// Server-side source of truth. Amounts are in sen (1 MYR = 100 sen).
 const PRODUCTS = {
-  'aquashorts':     { name: 'Year of the Horse Aquashorts',           priceSingle: 16900, priceBundle: 14900 }, // RM169 / RM149
-  'briefs':         { name: 'Year of the Horse Briefs',               priceSingle: 16900, priceBundle: 14900 }, // RM169 / RM149
-  'training_suit':  { name: 'Year of the Horse Girls Training Suit',  priceSingle: 18900, priceBundle: 16900 }, // RM189 / RM169
+  aquashorts: { name: 'Year of the Horse Aquashorts' },
+  briefs: { name: 'Year of the Horse Briefs' },
 };
+const PRICE_SINGLE = 16900; // RM169 — single item
+const PRICE_BUNDLE = 14900; // RM149 each — when total quantity >= 2
 
-const ALLOWED_COUNTRIES = ['MY', 'SG'];
+// Set SITE_ORIGIN in Vercel to your live site URL, e.g. https://atlaspoolside.com
+const SITE_ORIGIN = process.env.SITE_ORIGIN || '';
+const ALLOWED_ORIGIN = SITE_ORIGIN || '*';
 
-export default async function handler(req, res) {
-  const allowOrigin = applyCors(req, res, 'POST, OPTIONS');
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Origin for success/cancel redirects — prefer the configured base.
-  const redirectBase = (process.env.SITE_ORIGIN || allowOrigin).replace(/\/$/, '');
-
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
-
-    // Page sends: { items: [{ product, size, qty }] }
-    const { items } = req.body;
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Cart is empty or malformed.' });
+    const { items } = req.body || {};
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'No items in cart' });
     }
 
-    for (const item of items) {
-      if (!PRODUCTS[item.product]) {
-        return res.status(400).json({ error: `Unknown product: ${item.product}` });
-      }
-      if (!item.qty || item.qty < 1) {
-        return res.status(400).json({ error: 'Invalid quantity.' });
-      }
-    }
+    // Bundle rule: ordering 2+ items (mixed freely) drops every unit to RM149.
+    const totalQty = items.reduce((n, it) => n + (parseInt(it.qty, 10) || 0), 0);
+    const unitAmount = totalQty >= 2 ? PRICE_BUNDLE : PRICE_SINGLE;
 
-    const totalQty = items.reduce((sum, it) => sum + it.qty, 0);
-    const bundleActive = totalQty >= 2;
-
-    const lineItems = items.map((item) => {
-      const product = PRODUCTS[item.product];
-      const unitPrice = bundleActive ? product.priceBundle : product.priceSingle;
-      const tierLabel = bundleActive ? `Bundle price (RM${unitPrice / 100} each)` : `Single price (RM${unitPrice / 100})`;
+    const line_items = items.map((it) => {
+      const product = PRODUCTS[it.product];
+      if (!product) throw new Error('Unknown product: ' + it.product);
+      const qty = parseInt(it.qty, 10) || 0;
+      if (qty < 1) throw new Error('Invalid quantity');
+      const size = String(it.size || '').slice(0, 10);
       return {
+        quantity: qty,
         price_data: {
-          currency: 'myr',
-          unit_amount: unitPrice,
+          currency: CURRENCY,
+          unit_amount: unitAmount,
           product_data: {
             name: product.name,
-            description: item.size ? `Size: ${item.size} — ${tierLabel}` : tierLabel,
+            description: size ? 'Size: ' + size : undefined,
           },
         },
-        quantity: item.qty,
       };
     });
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       mode: 'payment',
-      line_items: lineItems,
-      shipping_address_collection: { allowed_countries: ALLOWED_COUNTRIES },
+      line_items,
+      shipping_address_collection: {
+        allowed_countries: ['MY', 'SG', 'BN', 'ID', 'TH', 'PH', 'VN', 'HK', 'AU', 'GB'],
+      },
       shipping_options: [
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 850, currency: 'myr' },  // RM8.50
-            display_name: 'West Malaysia (Semenanjung)',
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 3 },
-              maximum: { unit: 'business_day', value: 7 },
-            },
-          },
-        },
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 1650, currency: 'myr' },  // RM16.50
-            display_name: 'East Malaysia (Sabah & Sarawak)',
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 5 },
-              maximum: { unit: 'business_day', value: 10 },
-            },
-          },
-        },
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 3500, currency: 'myr' },  // RM35 — Singapore via Teleport
-            display_name: 'Singapore (via Teleport)',
-            delivery_estimate: {
-              minimum: { unit: 'business_day', value: 3 },
-              maximum: { unit: 'business_day', value: 7 },
-            },
-          },
-        },
-        {
-          shipping_rate_data: {
-            type: 'fixed_amount',
-            fixed_amount: { amount: 0, currency: 'myr' },  // Free — self collect
-            display_name: 'Self-collect from Clement',
-          },
-        },
+        { shipping_rate_data: { type: 'fixed_amount', display_name: 'Malaysia', fixed_amount: { amount: 1000, currency: CURRENCY } } },
+        { shipping_rate_data: { type: 'fixed_amount', display_name: 'Rest of Asia', fixed_amount: { amount: 2500, currency: CURRENCY } } },
+        { shipping_rate_data: { type: 'fixed_amount', display_name: 'International', fixed_amount: { amount: 4000, currency: CURRENCY } } },
       ],
-      success_url: `${redirectBase}/yoth?order=confirmed&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${redirectBase}/yoth`,
+      phone_number_collection: { enabled: true },
+      success_url: SITE_ORIGIN + '/?checkout=success',
+      cancel_url: SITE_ORIGIN + '/?checkout=cancelled',
     });
 
     return res.status(200).json({ url: session.url });
-
   } catch (err) {
-    console.error('Stripe error:', err.message);
-    return res.status(500).json({ error: 'Could not create checkout session.' });
+    console.error(err);
+    return res.status(500).json({ error: err.message });
   }
-}
+};
