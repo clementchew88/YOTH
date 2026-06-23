@@ -40,6 +40,7 @@ export default async function handler(req, res) {
       customer: {
         name: session.customer_details?.name || null,
         email: session.customer_details?.email || null,
+        phone: session.customer_details?.phone || null,
         address: session.customer_details?.address || null,
       },
       items,
