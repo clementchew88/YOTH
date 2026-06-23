@@ -1,42 +1,19 @@
 import Stripe from 'stripe';
+import { applyCors } from './_cors.js';
+import { checkAvailability } from './_stock.js';
 
-// ─── Pricing (in sen: RM169 = 16900) ─────────────────────────────────────────
-const PRICE_SINGLE = 16900;   // RM169 — single item
-const PRICE_BUNDLE = 14900;   // RM149 each — 2 or more items
-
-// ─── Product catalogue ────────────────────────────────────────────────────────
+// ─── Product catalogue (prices in sen) ───────────────────────────────────────
+// Bundle pricing kicks in once 2+ items (any product, any mix) are in the cart.
 const PRODUCTS = {
-  'aquashorts': { name: 'Year of the Horse Aquashorts' },
-  'briefs':     { name: 'Year of the Horse Briefs' },
+  'aquashorts':     { name: 'Year of the Horse Aquashorts',           priceSingle: 16900, priceBundle: 14900 }, // RM169 / RM149
+  'briefs':         { name: 'Year of the Horse Briefs',               priceSingle: 16900, priceBundle: 14900 }, // RM169 / RM149
+  'training_suit':  { name: 'Year of the Horse Girls Training Suit',  priceSingle: 18900, priceBundle: 16900 }, // RM189 / RM169
 };
 
 const ALLOWED_COUNTRIES = ['MY', 'SG'];
 
-// Accept both www and non-www variants of the site origin.
-function resolveOrigin(reqOrigin) {
-  const base = (process.env.SITE_ORIGIN || '').replace(/\/$/, '');
-  if (!base) return reqOrigin || '';
-  // Build the allowed set: whatever is configured, plus its www/non-www twin.
-  const allowed = new Set();
-  allowed.add(base);
-  if (base.startsWith('https://www.')) {
-    allowed.add('https://' + base.slice('https://www.'.length));
-  } else if (base.startsWith('https://')) {
-    allowed.add('https://www.' + base.slice('https://'.length));
-  }
-  // If the request's origin is in the allowed set, echo it back; else fall back to base.
-  if (reqOrigin && allowed.has(reqOrigin)) return reqOrigin;
-  return base;
-}
-
 export default async function handler(req, res) {
-  const reqOrigin = req.headers.origin || '';
-  const allowOrigin = resolveOrigin(reqOrigin);
-
-  res.setHeader('Access-Control-Allow-Origin', allowOrigin);
-  res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  const allowOrigin = applyCors(req, res, 'POST, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -63,33 +40,49 @@ export default async function handler(req, res) {
       }
     }
 
-    const totalQty = items.reduce((sum, it) => sum + it.qty, 0);
-    const unitPrice = totalQty >= 2 ? PRICE_BUNDLE : PRICE_SINGLE;
-    const tierLabel = totalQty >= 2 ? 'Bundle price (RM149 each)' : 'Single price (RM169)';
+    const availability = await checkAvailability(items);
+    if (!availability.ok) {
+      if (availability.reason === 'size_required') {
+        return res.status(400).json({ error: `Size is required for ${availability.product}.` });
+      }
+      return res.status(409).json({
+        error: `Only ${availability.available} left in size ${availability.size} for ${availability.product}.`,
+      });
+    }
 
-    const lineItems = items.map((item) => ({
-      price_data: {
-        currency: 'myr',
-        unit_amount: unitPrice,
-        product_data: {
-          name: PRODUCTS[item.product].name,
-          description: item.size ? `Size: ${item.size} — ${tierLabel}` : tierLabel,
+    const totalQty = items.reduce((sum, it) => sum + it.qty, 0);
+    const bundleActive = totalQty >= 2;
+    const freeMalaysiaShipping = totalQty > 2; // 3+ items, any product — free West/East Malaysia shipping
+
+    const lineItems = items.map((item) => {
+      const product = PRODUCTS[item.product];
+      const unitPrice = bundleActive ? product.priceBundle : product.priceSingle;
+      const tierLabel = bundleActive ? `Bundle price (RM${unitPrice / 100} each)` : `Single price (RM${unitPrice / 100})`;
+      return {
+        price_data: {
+          currency: 'myr',
+          unit_amount: unitPrice,
+          product_data: {
+            name: product.name,
+            description: item.size ? `Size: ${item.size} — ${tierLabel}` : tierLabel,
+          },
         },
-      },
-      quantity: item.qty,
-    }));
+        quantity: item.qty,
+      };
+    });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       line_items: lineItems,
       shipping_address_collection: { allowed_countries: ALLOWED_COUNTRIES },
+      phone_number_collection: { enabled: true },
       shipping_options: [
         {
           shipping_rate_data: {
             type: 'fixed_amount',
-            fixed_amount: { amount: 850, currency: 'myr' },  // RM8.50
-            display_name: 'West Malaysia (Semenanjung)',
+            fixed_amount: { amount: freeMalaysiaShipping ? 0 : 850, currency: 'myr' },  // RM8.50, free for 3+ items
+            display_name: freeMalaysiaShipping ? 'West Malaysia (Semenanjung) — Free (3+ items)' : 'West Malaysia (Semenanjung)',
             delivery_estimate: {
               minimum: { unit: 'business_day', value: 3 },
               maximum: { unit: 'business_day', value: 7 },
@@ -99,8 +92,8 @@ export default async function handler(req, res) {
         {
           shipping_rate_data: {
             type: 'fixed_amount',
-            fixed_amount: { amount: 1650, currency: 'myr' },  // RM16.50
-            display_name: 'East Malaysia (Sabah & Sarawak)',
+            fixed_amount: { amount: freeMalaysiaShipping ? 0 : 1750, currency: 'myr' },  // RM17.50, free for 3+ items
+            display_name: freeMalaysiaShipping ? 'East Malaysia (Sabah & Sarawak) — Free (3+ items)' : 'East Malaysia (Sabah & Sarawak)',
             delivery_estimate: {
               minimum: { unit: 'business_day', value: 5 },
               maximum: { unit: 'business_day', value: 10 },
@@ -126,8 +119,12 @@ export default async function handler(req, res) {
           },
         },
       ],
-      success_url: `${redirectBase}/yoth?order=confirmed`,
+      success_url: `${redirectBase}/yoth?order=confirmed&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${redirectBase}/yoth`,
+      metadata: {
+        // Read by api/stripe-webhook.js to decrement stock once payment is confirmed.
+        items: JSON.stringify(items.map((it) => ({ product: it.product, size: it.size, qty: it.qty }))),
+      },
     });
 
     return res.status(200).json({ url: session.url });
