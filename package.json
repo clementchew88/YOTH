@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Year of the Horse — Stripe Checkout serverless function",
   "private": true,
+  "type": "module",
   "engines": {
     "node": "24.x"
   },

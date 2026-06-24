@@ -661,7 +661,13 @@
       if (!opt.value) return;
       var remaining = remainingStock(product, opt.value);
       opt.disabled = remaining <= 0;
-      opt.textContent = remaining <= 0 ? opt.value + ' — Sold out' : opt.value;
+      if (remaining <= 0) {
+        opt.textContent = opt.value + ' — Sold out';
+      } else if (remaining <= 3) {
+        opt.textContent = opt.value + ' — Only ' + remaining + ' left!';
+      } else {
+        opt.textContent = opt.value + ' — ' + remaining + ' left';
+      }
     });
   }
 
