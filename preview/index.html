@@ -83,12 +83,12 @@
               linear-gradient(0deg, rgba(5,5,5,0.75) 0%, transparent 32%);
   pointer-events: none;
 }
-.yoth-hero-visual img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+.yoth-hero-visual img, .yoth-carousel-slide { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
 .yoth-hero-order-btn { position: absolute; z-index: 4; right: 40px; bottom: 40px; }
 
 /* Hero carousel */
 .yoth-carousel { position: absolute; inset: 0; touch-action: pan-y; }
-.yoth-carousel-slide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; opacity: 0; transition: opacity 0.8s ease; }
+.yoth-carousel-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease; }
 .yoth-carousel-slide.is-active { opacity: 1; }
 .yoth-carousel-dots { position: absolute; z-index: 4; left: 0; right: 0; bottom: 40px; display: flex; justify-content: center; gap: 8px; }
 .yoth-carousel-dot { width: 8px; height: 8px; border-radius: 99px; border: none; background: rgba(255,255,255,0.35); cursor: pointer; padding: 0; transition: background 0.2s ease, transform 0.2s ease; }
@@ -302,23 +302,23 @@
       </div>
       <div class="yoth-hero-visual yoth-reveal">
         <div class="yoth-carousel" id="yoth-hero-carousel">
-          <img class="yoth-carousel-slide is-active" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f173d64c986cebd03_1.jpg" alt="Year of the Horse collection 1" />
-          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f21a2963f405bbb13_2.jpg" alt="Year of the Horse collection 2" />
-          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f55c6edeb672949ed_3.jpg" alt="Year of the Horse collection 3" />
-          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f21a2963f405bbb16_4.jpg" alt="Year of the Horse collection 4" />
-          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f90c3a10955e1500a_5.jpg" alt="Year of the Horse collection 5" />
-          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f4082e5b152829df2_6.jpg" alt="Year of the Horse collection 6" />
-          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0fdf734d6e649f3c7c_7.jpg" alt="Year of the Horse collection 7" />
-          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f55c6edeb672949e9_8.jpg" alt="Year of the Horse collection 8" />
+          <img class="yoth-carousel-slide is-active" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f173d64c986cebd03_1.jpg" alt="" />
+          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f21a2963f405bbb13_2.jpg" alt="" />
+          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f55c6edeb672949ed_3.jpg" alt="" />
+          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f21a2963f405bbb16_4.jpg" alt="" />
+          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f90c3a10955e1500a_5.jpg" alt="" />
+          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f4082e5b152829df2_6.jpg" alt="" />
+          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0fdf734d6e649f3c7c_7.jpg" alt="" />
+          <img class="yoth-carousel-slide" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a414a0f55c6edeb672949e9_8.jpg" alt="" />
           <div class="yoth-carousel-dots">
-            <button class="yoth-carousel-dot is-active" data-i="0" aria-label="Slide 1"></button>
-            <button class="yoth-carousel-dot" data-i="1" aria-label="Slide 2"></button>
-            <button class="yoth-carousel-dot" data-i="2" aria-label="Slide 3"></button>
-            <button class="yoth-carousel-dot" data-i="3" aria-label="Slide 4"></button>
-            <button class="yoth-carousel-dot" data-i="4" aria-label="Slide 5"></button>
-            <button class="yoth-carousel-dot" data-i="5" aria-label="Slide 6"></button>
-            <button class="yoth-carousel-dot" data-i="6" aria-label="Slide 7"></button>
-            <button class="yoth-carousel-dot" data-i="7" aria-label="Slide 8"></button>
+            <button class="yoth-carousel-dot is-active"></button>
+            <button class="yoth-carousel-dot"></button>
+            <button class="yoth-carousel-dot"></button>
+            <button class="yoth-carousel-dot"></button>
+            <button class="yoth-carousel-dot"></button>
+            <button class="yoth-carousel-dot"></button>
+            <button class="yoth-carousel-dot"></button>
+            <button class="yoth-carousel-dot"></button>
           </div>
         </div>
         <a class="yoth-btn yoth-btn-primary yoth-hero-order-btn" href="#preorder">Order Now</a>
@@ -791,7 +791,6 @@
   var dots = Array.prototype.slice.call(carousel.querySelectorAll('.yoth-carousel-dot'));
   var current = 0;
   var timer = null;
-  var AUTOPLAY_MS = 3000;
 
   function show(i) {
     current = (i + slides.length) % slides.length;
@@ -801,7 +800,7 @@
 
   function startAutoplay() {
     stopAutoplay();
-    timer = setInterval(function () { show(current + 1); }, AUTOPLAY_MS);
+    timer = setInterval(function () { show(current + 1); }, 3000);
   }
 
   function stopAutoplay() {
