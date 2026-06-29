@@ -381,17 +381,17 @@
       <div class="yoth-gallery">
         <div class="yoth-gallery-main">
           <figure class="yoth-img-card big yoth-reveal">
-            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a41415c6fa1a8675758c391_Dimas%20and%20Tama.jpg" alt="Year of the Horse — campaign hero" />
+            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a41415c6fa1a8675758c391_Dimas%20and%20Tama.jpg" alt="YOTH — campaign hero" />
             <figcaption class="yoth-img-caption"><strong>Gallop forward.</strong><span>Year of the Horse · 2026</span></figcaption>
           </figure>
         </div>
         <div class="yoth-gallery-side">
           <figure class="yoth-img-card yoth-reveal">
-            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a4145f0988b4ffd98e67c43_Ashton%20Landscape%20Outdoors.jpg" alt="Year of the Horse — product detail" />
+            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a4145f0988b4ffd98e67c43_Ashton%20Landscape%20Outdoors.jpg" alt="YOTH — product detail" />
             <figcaption class="yoth-img-caption"><strong>Stand out before the start.</strong><span>Briefs · Limited Run</span></figcaption>
           </figure>
           <figure class="yoth-img-card yoth-reveal">
-            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a4145f0f291e2e269a7c1c1_Reiinhart%20Landscape.jpg" alt="Year of the Horse — on deck" />
+            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a4145f0f291e2e269a7c1c1_Reiinhart%20Landscape.jpg" alt="YOTH — on deck" />
             <figcaption class="yoth-img-caption"><strong>Own the deck.</strong><span>Briefs · Limited Run</span></figcaption>
           </figure>
         </div>
@@ -412,7 +412,7 @@
       <div class="yoth-products">
         <article class="yoth-product yoth-reveal">
           <div class="yoth-product-media">
-            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3b65ae40a7a95d1ce65588_050d9cc362ddb459b2986e32e418f8a7_Mike%202.jpg" alt="Year of the Horse aquashorts" />
+            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3b65ae40a7a95d1ce65588_050d9cc362ddb459b2986e32e418f8a7_Mike%202.jpg" alt="YOTH aquashorts" />
           </div>
           <div class="yoth-product-copy">
             <div class="yoth-product-type">[ Aquashorts ]</div>
@@ -427,7 +427,7 @@
         </article>
         <article class="yoth-product yoth-reveal">
           <div class="yoth-product-media">
-            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3809a9ca0e46e56c39d655_Briefs%20Cart.jpg" alt="Year of the Horse swim briefs" />
+            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3809a9ca0e46e56c39d655_Briefs%20Cart.jpg" alt="YOTH swim briefs" />
           </div>
           <div class="yoth-product-copy">
             <div class="yoth-product-type">[ Briefs ]</div>
@@ -559,7 +559,7 @@
           </div>
           </div>
           <div class="yoth-shop-banner">
-            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3809a3c7ceaf29c18128fb_Aquashorts%20Cart.jpg" alt="Year of the Horse Aquashorts — Cart" />
+            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3809a3c7ceaf29c18128fb_Aquashorts%20Cart.jpg" alt="YOTH Aquashorts — Cart" />
           </div>
         </div>
 
@@ -580,7 +580,7 @@
           </div>
           </div>
           <div class="yoth-shop-banner">
-            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3809a9ca0e46e56c39d655_Briefs%20Cart.jpg" alt="Year of the Horse Briefs — Cart" />
+            <img src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a3809a9ca0e46e56c39d655_Briefs%20Cart.jpg" alt="YOTH Briefs — Cart" />
           </div>
         </div>
 
@@ -622,7 +622,7 @@
   <section class="yoth-confirm-section" id="yoth-confirm" hidden>
     <div class="yoth-container">
       <div class="yoth-confirm-banner">
-        <img id="yoth-confirm-image" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a389f8762107ddfa9164a7e_Checkout%20Success.jpg" alt="Year of the Horse — order confirmed" />
+        <img id="yoth-confirm-image" src="https://cdn.prod.website-files.com/69fac4e10099cad93e71965a/6a389f8762107ddfa9164a7e_Checkout%20Success.jpg" alt="YOTH — order confirmed" />
       </div>
 
       <div class="yoth-confirm-head">
@@ -828,9 +828,8 @@
   carousel.addEventListener('touchend', function (e) {
     if (touchStartX === null) return;
     var deltaX = e.changedTouches[0].clientX - touchStartX;
-    var SWIPE_THRESHOLD = 40;
-    if (deltaX > SWIPE_THRESHOLD) { goTo(current - 1); }
-    else if (deltaX < -SWIPE_THRESHOLD) { goTo(current + 1); }
+    if (deltaX > 40) { goTo(current - 1); }
+    else if (deltaX < -40) { goTo(current + 1); }
     touchStartX = null;
   });
 
